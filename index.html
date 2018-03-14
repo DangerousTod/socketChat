@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Free Chat</title>
+	<style>
+		body{
+			background: #FFC469;
+		}
+		
+		#container{
+			width:1000px;
+			margin-left: 80px;
+		}
+		
+		#chatWindow{
+			height:400px;
+		}
+		
+		#mainWrapper{
+			display:none;		
+			max-width: 600px;
+			border:1px #222 solid;
+			border-radius: 8px;
+			background: #EEAD0E;
+			padding:8px;
+			margin-left: 80px;
+			height: 60px;	
+		}
+		
+		#chatWrapper{
+			float:left;
+			border:1px #222 solid;
+			border-radius: 8px;
+			background: #FFE7BA;
+			padding:8px;
+			margin-left: 8px;
+		}
+		
+		#userWrapper{
+			float:left;
+			border:1px #222 solid;
+			border-radius: 8px;
+			background: #FEF0DB	;
+			padding:8px;
+			margin-left: -750px;
+			width:100px;
+			max-height:200px;
+		}
+
+		#namesWrapper{
+			float: left;
+			border:1px #222 solid;
+			border-radius: 8px;
+			background: #FEF0DB;
+			padding:8px;
+			margin-left:80px;
+		
+		}
+
+		input{
+			height:30px;
+			border:solid 1px #222;
+			border-radius: 8px;
+		}
+
+	</style>
+</head>
+<body>
+	<div id="container">
+		<div id="namesWrapper">
+			<img src="images/bN.png" width="65" height="90" align="right">
+			<h2>Free Chat</h2>
+			
+			<p>Choose Your Username</p>
+			
+			<div id="error"></div>
+			<form id="usernameForm">
+				<input type="text" size="50" id="username">
+				<input type="submit" value="Submit">
+			</form>
+
+		</div>
+
+		<div id="mainWrapper">
+			<h2>Free Chat</h2>
+			<div id="chatWrapper">
+				<div id="chatWindow"></div>
+				<form id="messageForm">
+					<input type="text" size="50" id="message" placeholder="Say Something...">
+					<input type="submit" value="Submit">
+				</form>
+			</div>
+
+			<div id="userWrapper">
+				<div id="users"></div>
+		</div>
+	</div>
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	$(function(){
+		var socket = io.connect();
+		var $messageForm = $('#messageForm');
+		var $message = $('#message');
+		var $chat = $('#chatWindow');
+		var $usernameForm = $('#usernameForm');
+		var $users = $('#users');
+		var $username = $('#username');
+		var $error = $('#error');
+
+		$usernameForm.submit(function(e){
+			e.preventDefault();
+			socket.emit('new user', $username.val(), function(data){
+				if(data){
+					$('#namesWrapper').hide();
+					$('#mainWrapper').show();
+				} else {
+					$error.html('That name is being used');
+				}
+			});
+		});
+
+		socket.on('usernames', function(data){
+			var html = '';
+			for(i = 0; i < data.length; i++){
+				html += data[i] + '<br>';
+			}
+			$users.html(html);
+		});
+
+		$messageForm.submit(function(e){
+			e.preventDefault();
+			socket.emit('send message', $message.val());
+			$message.val('');
+
+//			console.log('Submitted');
+		});
+
+		socket.on('new message', function(data){
+			$chat.append('<strong>'+data.user+'</strong>: '+data.msg+'<br>');
+		});
+	});
+	</script>
+</body>
+</html>
